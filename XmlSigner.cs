@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using System.IO;
 
-namespace OpenKnx.Toolbox.Sign
+namespace OpenKNX.Toolbox.Sign
 {
     class XmlSigning
     {
