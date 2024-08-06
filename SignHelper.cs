@@ -25,6 +25,19 @@ namespace OpenKNX.Toolbox.Sign
             public string ETS { get; private set; }
         }
 
+        
+        public static async Task<int> ExportKnxprodAsync(string iWorkingDir, string iKnxprodFileName, string lTempXmlFileName, string iXsdFileName, bool iIsDebug, bool iAutoXsd)
+        {
+            int result = 0;
+            Task runner = Task.Run(() => {
+                result = ExportKnxprod(iWorkingDir, iKnxprodFileName, lTempXmlFileName, iXsdFileName, iIsDebug, iAutoXsd);
+            });
+            await runner;
+            if(runner.Exception != null)
+                throw runner.Exception;
+            return result;
+        }
+
         public static int ExportKnxprod(string iWorkingDir, string iKnxprodFileName, string lTempXmlFileName, string iXsdFileName, bool iIsDebug, bool iAutoXsd)
         {
             string outputFolder = AppDomain.CurrentDomain.BaseDirectory;
@@ -58,7 +71,6 @@ namespace OpenKNX.Toolbox.Sign
             SignFiles(outputFolder, manuId);
             CheckMaster(outputFolder, 20); // TODO get real nsVersion
             ZipFolder(outputFolder, iKnxprodFileName);
-
             return 0;
         }
 
