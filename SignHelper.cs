@@ -344,12 +344,10 @@ namespace OpenKNX.Toolbox.Sign
         {
             string lResult = "";
 
-            int lProjectVersion = int.Parse(lXmlns.Substring(27));
-
             if (EtsVersions.ContainsKey(lXmlns))
             {
                 string lEts = "";
-                string lPath = "";
+                string lPath;
 
                 if (Environment.Is64BitOperatingSystem)
                     lPath = @"C:\Program Files (x86)\ETS6";
@@ -395,8 +393,8 @@ namespace OpenKNX.Toolbox.Sign
                         { //otherwise it might be the file in the root folder
                             if (!File.Exists(Path.Combine(path, "Knx.Ets.XmlSigning.dll"))) continue;
                             System.Diagnostics.FileVersionInfo versionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(Path.Combine(path, "Knx.Ets.XmlSigning.dll"));
-                            string newVersion = versionInfo.FileVersion;
-                            if (lSubdir.Split('.').Length == 2) newVersion = string.Join('.', newVersion.Split('.').Take(2));
+                            string newVersion = versionInfo.FileVersion ?? "0.0.0.0";
+                            if (lSubdir.Split('.').Length != 2) newVersion = string.Join('.', newVersion.Split('.').Take(2));
                             // if(newVersion.Split('.').Length != 4) newVersion += ".0";
 
                             if (lSubdir == newVersion)
