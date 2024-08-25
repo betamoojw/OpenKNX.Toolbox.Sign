@@ -109,7 +109,7 @@ namespace OpenKNX.Toolbox.Sign
             System.IO.Compression.ZipFile.CreateFromDirectory(outputFolder, outputFile);
         }
 
-        private static void CheckMaster(string outputFolder, int ns)
+        public static async Task CheckMaster(string outputFolder, int ns)
         {
             string basePath = Path.GetFullPath("..", outputFolder);
             if(File.Exists(Path.Combine(outputFolder, "knx_master.xml")))
@@ -134,9 +134,8 @@ namespace OpenKNX.Toolbox.Sign
                 if(!Directory.Exists(Path.Combine(basePath, "Masters")))
                     Directory.CreateDirectory(Path.Combine(basePath, "Masters"));
                 HttpClient client = new HttpClient();
-                var task = client.GetStringAsync($"https://update.knx.org/data/XML/project-{ns}/knx_master.xml");
-                task.Wait();
-                File.WriteAllText(Path.Combine(basePath, "Masters", $"project-{ns}.xml"), task.Result.ToString());
+                string masterXML = await client.GetStringAsync($"https://update.knx.org/data/XML/project-{ns}/knx_master.xml");
+                File.WriteAllText(Path.Combine(basePath, "Masters", $"project-{ns}.xml"), masterXML);
             }
             File.Copy(Path.Combine(basePath, "Masters", $"project-{ns}.xml"), Path.Combine(outputFolder, $"knx_master.xml"));
         }
@@ -326,7 +325,7 @@ namespace OpenKNX.Toolbox.Sign
             new EtsVersion("4.0", 11, true),
         };
 
-        private static EtsVersion? checkEtsPath(string path, int ns, string suffix = "")
+        private static EtsVersion? checkEtsPath(string path, int ns)
         {
             if(!File.Exists(System.IO.Path.Combine(path, "Knx.Ets.Xml.ObjectModel.dll"))) return null;
                 string versionInfo = FileVersionInfo.GetVersionInfo(System.IO.Path.Combine(path, "Knx.Ets.Xml.ObjectModel.dll")).FileVersion?.Substring(0,3) ?? "0.0";
@@ -337,13 +336,14 @@ namespace OpenKNX.Toolbox.Sign
             return null;
         }
 
-        public static string FindEtsPath(int namespaceVersion)
+        public static string FindEtsPath(int namespaceVersion, bool silent = false)
         {
             if(Directory.Exists(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CV"))) {
                 foreach(string path in Directory.GetDirectories(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CV")).Reverse()) {
                     EtsVersion? ets = checkEtsPath(path, namespaceVersion);
                     if(ets != null) {
-                        Console.WriteLine($"Found namespace {namespaceVersion} in xml, using ETS {ets.Version} (local) for conversion... (Path: {path})");
+                        if(!silent)
+                            Console.WriteLine($"Found namespace {namespaceVersion} in xml, using ETS {ets.Version} (local) for conversion... (Path: {path})");
                         return path;
                     }
                 }
@@ -353,7 +353,8 @@ namespace OpenKNX.Toolbox.Sign
             {
                 EtsVersion? ets = checkEtsPath(path, namespaceVersion);
                 if(ets != null) {
-                    Console.WriteLine($"Found namespace {namespaceVersion} in xml, using ETS {ets.Version} for conversion... (Path: {path})");
+                    if(!silent)
+                        Console.WriteLine($"Found namespace {namespaceVersion} in xml, using ETS {ets.Version} for conversion... (Path: {path})");
                     return path;
                 }
             }
