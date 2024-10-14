@@ -57,16 +57,24 @@ namespace OpenKNX.Toolbox.Sign
             if(!string.IsNullOrEmpty(iBaggageName))
                 CopyBaggages(iWorkingDir, iBaggageName, outputFolder, manuId);
 
-            SignFiles(outputFolder, manuId);
-            CheckMaster(outputFolder, 20); // TODO get real nsVersion
+            string content = File.ReadAllText(lTempXmlFileName);
+            Regex regex = new Regex("http://knx.org/xml/project/([0-9]{2})");
+            Match m = regex.Match(content);
+            int ns;
+            if(m.Success)
+                ns = int.Parse(m.Groups[1].Value);
+            else
+                throw new Exception("NameSpaceVersion konnte nicht ermittelt werden.");
+
+            SignFiles(outputFolder, manuId, ns);
+            CheckMaster(outputFolder, ns).Wait(); // TODO get real nsVersion
             ZipFolder(outputFolder, iKnxprodFileName);
             return 0;
         }
 
-        public static void SignFiles(string outputFolder, string manuId)
+        public static void SignFiles(string outputFolder, string manuId, int ns)
         {
-            //TODO get namespace
-            string iPathETS = FindEtsPath(20);
+            string iPathETS = FindEtsPath(ns);
             IDictionary<string, string> applProgIdMappings = new Dictionary<string, string>();
             IDictionary<string, string> applProgHashes = new Dictionary<string, string>();
             IDictionary<string, string> mapBaggageIdToFileIntegrity = new Dictionary<string, string>(50);
@@ -85,20 +93,18 @@ namespace OpenKNX.Toolbox.Sign
             }
             FileInfo appInfo = new FileInfo(appFile);
 
-            // TODO get correct ns
-            int nsVersion = 20; // int.Parse(ns.Substring(ns.LastIndexOf('/') + 1));
-            ApplicationProgramHasher aph = new ApplicationProgramHasher(appInfo, mapBaggageIdToFileIntegrity, iPathETS, nsVersion, true);
+            ApplicationProgramHasher aph = new ApplicationProgramHasher(appInfo, mapBaggageIdToFileIntegrity, iPathETS, ns, true);
             aph.HashFile();
 
             applProgIdMappings.Add(aph.OldApplProgId, aph.NewApplProgId);
             if (!applProgHashes.ContainsKey(aph.NewApplProgId))
                 applProgHashes.Add(aph.NewApplProgId, aph.GeneratedHashString);
 
-            HardwareSigner hws = new HardwareSigner(hwFileInfo, applProgIdMappings, applProgHashes, iPathETS, nsVersion, true);
+            HardwareSigner hws = new HardwareSigner(hwFileInfo, applProgIdMappings, applProgHashes, iPathETS, ns, true);
             hws.SignFile();
             IDictionary<string, string> hardware2ProgramIdMapping = hws.OldNewIdMappings;
 
-            CatalogIdPatcher cip = new CatalogIdPatcher(catalogFileInfo, hardware2ProgramIdMapping, iPathETS, nsVersion);
+            CatalogIdPatcher cip = new CatalogIdPatcher(catalogFileInfo, hardware2ProgramIdMapping, iPathETS, ns);
             cip.Patch();
 
             XmlSigning.SignDirectory(Path.Combine(outputFolder, manuId), iPathETS);
