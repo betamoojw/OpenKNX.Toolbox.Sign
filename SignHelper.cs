@@ -344,8 +344,8 @@ namespace OpenKNX.Toolbox.Sign
 
         public static string FindEtsPath(int namespaceVersion, bool silent = false)
         {
-            if(Directory.Exists(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CV"))) {
-                foreach(string path in Directory.GetDirectories(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CV")).Reverse()) {
+            if(Directory.Exists(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "CV"))) {
+                foreach(string path in Directory.GetDirectories(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "CV")).Reverse()) {
                     EtsVersion? ets = checkEtsPath(path, namespaceVersion);
                     if(ets != null) {
                         if(!silent)
