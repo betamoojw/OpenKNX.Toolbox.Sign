@@ -331,6 +331,7 @@ namespace OpenKNX.Toolbox.Sign
             new EtsVersion("4.0", 11, true),
         };
 
+#nullable enable
         private static EtsVersion? checkEtsPath(string path, int ns)
         {
             if(!File.Exists(System.IO.Path.Combine(path, "Knx.Ets.Xml.ObjectModel.dll"))) return null;
@@ -369,3 +370,4 @@ namespace OpenKNX.Toolbox.Sign
         }
     }
 }
+#nullable disable

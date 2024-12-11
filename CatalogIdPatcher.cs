@@ -15,16 +15,17 @@ namespace OpenKNX.Toolbox.Sign
         {
             Assembly asm = Assembly.LoadFrom(Path.Combine(basePath, "Knx.Ets.XmlSigning.dll"));
             
-            if(asm.GetName().Version.ToString().StartsWith("6.2.")) {
+            System.Version lVersion = asm.GetName().Version;
+            if(lVersion >= new System.Version("6.2.0")) { //ab ETS6.2
                 Assembly objm = Assembly.LoadFrom(Path.Combine(basePath, "Knx.Ets.Common.dll"));
                 object knxSchemaVersion = Enum.ToObject(objm.GetType("Knx.Ets.Common.Schema.KnxXmlSchemaVersion"), nsVersion);
                 _type = asm.GetType("Knx.Ets.XmlSigning.Signer.CatalogIdPatcher");
                 _instance = Activator.CreateInstance(_type, catalogFile, hardware2ProgramIdMapping, knxSchemaVersion);
-            } else if(asm.GetName().Version.ToString().StartsWith("6.")) {
+            } else if(lVersion >= new System.Version("6.0.0")) { //ab ETS6.0/6.1
                 Assembly objm = Assembly.LoadFrom(Path.Combine(basePath, "Knx.Ets.Xml.ObjectModel.dll"));
                 object knxSchemaVersion = Enum.ToObject(objm.GetType("Knx.Ets.Xml.ObjectModel.KnxXmlSchemaVersion"), nsVersion);
                 _type = asm.GetType("Knx.Ets.XmlSigning.Signer.CatalogIdPatcher");
-                if (asm.GetName().Version.ToString().StartsWith("6.0"))
+                if (lVersion < new System.Version("6.1.0)"))
                     _type = asm.GetType("Knx.Ets.XmlSigning.CatalogIdPatcher");
                 _instance = Activator.CreateInstance(_type, catalogFile, hardware2ProgramIdMapping, knxSchemaVersion);
             } else {
