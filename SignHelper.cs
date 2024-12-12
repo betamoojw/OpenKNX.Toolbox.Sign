@@ -75,6 +75,8 @@ namespace OpenKNX.Toolbox.Sign
         public static void SignFiles(string outputFolder, string manuId, int ns)
         {
             string iPathETS = FindEtsPath(ns);
+            if(string.IsNullOrEmpty(iPathETS))
+                throw new Exception("Could not find ETS path for namespace " + ns);
             IDictionary<string, string> applProgIdMappings = new Dictionary<string, string>();
             IDictionary<string, string> applProgHashes = new Dictionary<string, string>();
             IDictionary<string, string> mapBaggageIdToFileIntegrity = new Dictionary<string, string>(50);

@@ -28,7 +28,7 @@ namespace OpenKNX.Toolbox.Sign
                 System.Type scheme = objm.GetType("Knx.Ets.Xml.ObjectModel.KnxXmlSchemaVersion");
                 object knxSchemaVersion = Enum.ToObject(scheme, nsVersion);
                 _type = asm.GetType("Knx.Ets.XmlSigning.Signer.ApplicationProgramHasher");
-                if (lVersion < new System.Version("6.1.0)"))
+                if (lVersion < new System.Version("6.1.0"))
                     _type = asm.GetType("Knx.Ets.XmlSigning.ApplicationProgramHasher");
                 _instance = Activator.CreateInstance(_type, applProgFile, mapBaggageIdToFileIntegrity, patchIds, knxSchemaVersion);
             } else { //für ETS5 und früher
