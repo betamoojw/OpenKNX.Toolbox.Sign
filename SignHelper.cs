@@ -321,6 +321,7 @@ namespace OpenKNX.Toolbox.Sign
         };
 
         private static List<EtsVersion> etsVersions = new() {
+            new EtsVersion("6.3", 24, false),
             new EtsVersion("6.2", 24, false),
             new EtsVersion("6.1", 23, false),
             new EtsVersion("6.0", 22, false),
@@ -337,8 +338,9 @@ namespace OpenKNX.Toolbox.Sign
             if(!File.Exists(System.IO.Path.Combine(path, "Knx.Ets.Xml.ObjectModel.dll"))) return null;
                 string versionInfo = FileVersionInfo.GetVersionInfo(System.IO.Path.Combine(path, "Knx.Ets.Xml.ObjectModel.dll")).FileVersion?.Substring(0,3) ?? "0.0";
             
-            EtsVersion? vers = etsVersions.SingleOrDefault(v => v.Version == versionInfo);
+            EtsVersion? vers = etsVersions.FirstOrDefault(v => v.Version == versionInfo);
 
+            if (vers == null) vers = etsVersions.First();
             if(vers != null && vers.CheckNs(ns)) return vers;
             return null;
         }
