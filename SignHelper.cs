@@ -340,8 +340,8 @@ namespace OpenKNX.Toolbox.Sign
             
             EtsVersion? vers = etsVersions.FirstOrDefault(v => v.Version == versionInfo);
 
-            if (vers == null) vers = etsVersions.First();
-            if(vers != null && vers.CheckNs(ns)) return vers;
+            if(vers == null) vers = etsVersions.First();
+            if(vers.CheckNs(ns)) return vers;
             return null;
         }
 
