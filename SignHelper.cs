@@ -42,7 +42,7 @@ namespace OpenKNX.Toolbox.Sign
             if(string.IsNullOrEmpty(manuId))
             {
                 Console.WriteLine("Could not find ManuId in xml");
-                return -1;
+                throw new Exception("Could not find ManuId in xml");
             }
             Directory.CreateDirectory(outputFolder);
             Directory.CreateDirectory(Path.Combine(outputFolder, manuId));
