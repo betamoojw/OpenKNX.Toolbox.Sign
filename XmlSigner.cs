@@ -10,13 +10,21 @@ namespace OpenKNX.Toolbox.Sign
             string path,
             string basePath,
             bool useCasingOfBaggagesXml = false,
-            string[] excludeFileEndings = null)
+            string[]? excludeFileEndings = null)
         {
             Assembly asm = Assembly.LoadFrom(Path.Combine(basePath, "Knx.Ets.XmlSigning.dll"));
 
-            Type ds = asm.GetType("Knx.Ets.XmlSigning.XmlSigning");
+            Type? ds = asm.GetType("Knx.Ets.XmlSigning.XmlSigning");
+            if(ds == null)
+                throw new Exception("Could not create XmlSigning");
 
-            ds.GetMethod("SignDirectory", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { path, useCasingOfBaggagesXml, excludeFileEndings });
+            MethodInfo? signdirectory = ds.GetMethod("SignDirectory", BindingFlags.Static | BindingFlags.NonPublic);
+            if(signdirectory == null)
+                throw new Exception("Could not sign directory. signdirectory method not found");
+            string[] temp = [];
+            if(excludeFileEndings != null)
+                temp = excludeFileEndings;
+            signdirectory.Invoke(null, new object[] { path, useCasingOfBaggagesXml, temp });
         }
     }
 }

@@ -15,19 +15,17 @@ namespace OpenKNX.Toolbox.Sign
             Application
         }
         
-        public static async Task<int> ExportKnxprodAsync(string iWorkingDir, string iKnxprodFileName, string lTempXmlFileName, string iXsdFileName, bool iIsDebug, bool iAutoXsd)
+        public static async Task ExportKnxprodAsync(string iWorkingDir, string iKnxprodFileName, string lTempXmlFileName, string iXsdFileName, bool iIsDebug, bool iAutoXsd)
         {
-            int result = 0;
             Task runner = Task.Run(() => {
-                result = ExportKnxprod(iWorkingDir, iKnxprodFileName, lTempXmlFileName, iXsdFileName, iIsDebug, iAutoXsd);
+                ExportKnxprod(iWorkingDir, iKnxprodFileName, lTempXmlFileName, iXsdFileName, iIsDebug, iAutoXsd);
             });
             await runner;
             if(runner.Exception != null)
                 throw runner.Exception;
-            return result;
         }
 
-        public static int ExportKnxprod(string iWorkingDir, string iKnxprodFileName, string lTempXmlFileName, string iXsdFileName, bool iIsDebug, bool iAutoXsd)
+        public static void ExportKnxprod(string iWorkingDir, string iKnxprodFileName, string lTempXmlFileName, string iXsdFileName, bool iIsDebug, bool iAutoXsd)
         {
             string outputFolder = AppDomain.CurrentDomain.BaseDirectory;
             if(Directory.Exists(Path.Combine(outputFolder, "Storage")))
@@ -41,7 +39,6 @@ namespace OpenKNX.Toolbox.Sign
             string manuId = GetManuId(lTempXmlFileName);
             if(string.IsNullOrEmpty(manuId))
             {
-                Console.WriteLine("Could not find ManuId in xml");
                 throw new Exception("Could not find ManuId in xml");
             }
             Directory.CreateDirectory(outputFolder);
@@ -69,7 +66,6 @@ namespace OpenKNX.Toolbox.Sign
             SignFiles(outputFolder, manuId, ns);
             CheckMaster(outputFolder, ns).Wait(); // TODO get real nsVersion
             ZipFolder(outputFolder, iKnxprodFileName);
-            return 0;
         }
 
         public static void SignFiles(string outputFolder, string manuId, int ns)
@@ -152,30 +148,44 @@ namespace OpenKNX.Toolbox.Sign
         {
             //if (ValidateXsd(iWorkingDir, lTempXmlFileName, lTempXmlFileName, iXsdFileName, iAutoXsd)) return 1;
 
-            Console.WriteLine("Generating knxprod file...");
-
-            XDocument xdoc = null;
+            XDocument? xdoc = null;
             string xmlContent = File.ReadAllText(lTempXmlFileName);
             xdoc = XDocument.Parse(xmlContent, LoadOptions.SetLineInfo);
 
-            XNode lXmlModel = xdoc.FirstNode;
-            if (lXmlModel.NodeType == XmlNodeType.ProcessingInstruction)
+            XNode? lXmlModel = xdoc.FirstNode;
+            if (lXmlModel != null && lXmlModel.NodeType == XmlNodeType.ProcessingInstruction)
                 lXmlModel.Remove();
 
+            if(xdoc.Root == null)
+                throw new Exception("Root element not found in xml");
             string ns = xdoc.Root.Name.NamespaceName;
-            XElement xmanu = xdoc.Root.Element(XName.Get("ManufacturerData", ns)).Element(XName.Get("Manufacturer", ns));
+            XElement? xmanu = xdoc.Root.Element(XName.Get("ManufacturerData", ns))?.Element(XName.Get("Manufacturer", ns));
 
-            string manuId = xmanu.Attribute("RefId").Value;
-            XElement xcata = xmanu.Element(XName.Get("Catalog", ns));
-            XElement xhard = xmanu.Element(XName.Get("Hardware", ns));
-            XElement xappl = xmanu.Element(XName.Get("ApplicationPrograms", ns));
-            XElement xbagg = xmanu.Element(XName.Get("Baggages", ns));
+            if(xmanu == null)
+                throw new Exception("Manufacturer element not found in xml");
+
+            string? manuId = xmanu.Attribute("RefId")?.Value;
+            XElement? xcata = xmanu.Element(XName.Get("Catalog", ns));
+            XElement? xhard = xmanu.Element(XName.Get("Hardware", ns));
+            XElement? xappl = xmanu.Element(XName.Get("ApplicationPrograms", ns));
+            XElement? xbagg = xmanu.Element(XName.Get("Baggages", ns));
+
+            if(string.IsNullOrEmpty(manuId))
+                throw new Exception("Manufacturer Id not found in xml");
+            if(xcata == null)
+                throw new Exception("Catalog element not found in xml");
+            if(xhard == null)
+                throw new Exception("Hardware element not found in xml");
+            if(xappl == null)
+                throw new Exception("ApplicationPrograms element not found in xml");
+            if(xbagg == null)
+                throw new Exception("Baggages element not found in xml");
 
             List<XElement> xcataL = new List<XElement>();
             List<XElement> xhardL = new List<XElement>();
             List<XElement> xapplL = new List<XElement>();
             List<XElement> xbaggL = new List<XElement>();
-            XElement xlangs = xmanu.Element(XName.Get("Languages", ns));
+            XElement? xlangs = xmanu.Element(XName.Get("Languages", ns));
 
             if (xlangs != null)
             {
@@ -205,7 +215,7 @@ namespace OpenKNX.Toolbox.Sign
 
             //Save Catalog
             xappl.Remove();
-            if (xcataL.Count > 0)
+            if (xcataL.Count > 0 && xlangs != null)
             {
                 xlangs.Elements().Remove();
                 foreach (XElement xlang in xcataL)
@@ -213,12 +223,12 @@ namespace OpenKNX.Toolbox.Sign
                 xmanu.Add(xlangs);
             }
             xdoc.Save(Path.Combine(outputFolder, manuId, "Catalog.xml"));
-            if (xcataL.Count > 0) xlangs.Remove();
+            if (xcataL.Count > 0 && xlangs != null) xlangs.Remove();
             xcata.Remove();
 
             // Save Hardware
             xmanu.Add(xhard);
-            if (xhardL.Count > 0)
+            if (xhardL.Count > 0 && xlangs != null)
             {
                 xlangs.Elements().Remove();
                 foreach (XElement xlang in xhardL)
@@ -226,14 +236,14 @@ namespace OpenKNX.Toolbox.Sign
                 xmanu.Add(xlangs);
             }
             xdoc.Save(Path.Combine(outputFolder, manuId, "Hardware.xml"));
-            if (xhardL.Count > 0) xlangs.Remove();
+            if (xhardL.Count > 0 && xlangs != null) xlangs.Remove();
             xhard.Remove();
 
             if (xbagg != null)
             {
                 // Save Baggages
                 xmanu.Add(xbagg);
-                if (xbaggL.Count > 0)
+                if (xbaggL.Count > 0 && xlangs != null)
                 {
                     xlangs.Elements().Remove();
                     foreach (XElement xlang in xbaggL)
@@ -241,21 +251,23 @@ namespace OpenKNX.Toolbox.Sign
                     xmanu.Add(xlangs);
                 }
                 xdoc.Save(Path.Combine(outputFolder, manuId, "Baggages.xml"));
-                if (xbaggL.Count > 0) xlangs.Remove();
+                if (xbaggL.Count > 0 && xlangs != null) xlangs.Remove();
                 xbagg.Remove();
             }
 
             xmanu.Add(xappl);
-            if (xapplL.Count > 0)
+            if (xapplL.Count > 0 && xlangs != null)
             {
                 xlangs.Elements().Remove();
                 foreach (XElement xlang in xapplL)
                     xlangs.Add(xlang);
                 xmanu.Add(xlangs);
             }
-            string appId = xappl.Elements(XName.Get("ApplicationProgram", ns)).First().Attribute("Id").Value;
+            string? appId = xappl.Elements(XName.Get("ApplicationProgram", ns)).First().Attribute("Id")?.Value;
+            if(string.IsNullOrEmpty(appId))
+                throw new Exception("ApplicationProgram Id not found in xml");
             xdoc.Save(Path.Combine(outputFolder, manuId, $"{appId}.xml"));
-            if (xapplL.Count > 0) xlangs.Remove();
+            if (xapplL.Count > 0 && xlangs != null) xlangs.Remove();
         }
 
         private static void CopyBaggages(string iWorkingDir, string iBaggageName, string outputFolder, string manuId)
@@ -270,7 +282,10 @@ namespace OpenKNX.Toolbox.Sign
         private static DocumentCategory GetDocumentCategory(XElement iTranslationUnit)
         {
             DocumentCategory lCategory = DocumentCategory.None;
-            string lId = iTranslationUnit.Attribute("RefId").Value;
+            string? lId = iTranslationUnit.Attribute("RefId")?.Value;
+
+            if(string.IsNullOrEmpty(lId))
+                throw new Exception("RefId not found in TranslationUnit");
 
             lId = lId.Substring(6);
             if (lId.StartsWith("_A-"))
@@ -301,9 +316,13 @@ namespace OpenKNX.Toolbox.Sign
         {
             // we assume, that here are adding just few TranslationUnits
             // get parent element (Language)
-            XElement lSourceLanguage = iTranslationUnit.Parent;
-            string lSourceLanguageId = lSourceLanguage.Attribute("Identifier").Value;
-            XElement lTargetLanguage = iLanguageList.Elements("Child").FirstOrDefault(child => child.Attribute("Name").Value == lSourceLanguageId);
+            XElement? lSourceLanguage = iTranslationUnit.Parent;
+            if(lSourceLanguage == null)
+                throw new Exception("Language element not found in xml");
+            string? lSourceLanguageId = lSourceLanguage.Attribute("Identifier")?.Value;
+            if(string.IsNullOrEmpty(lSourceLanguageId))
+                throw new Exception("Language Identifier not found in xml");
+            XElement? lTargetLanguage = iLanguageList.Elements("Child").FirstOrDefault(child => child.Attribute("Name")?.Value == lSourceLanguageId);
             if (lTargetLanguage == null)
             {
                 // we create language element
@@ -347,14 +366,12 @@ namespace OpenKNX.Toolbox.Sign
             return null;
         }
 
-        public static string FindEtsPath(int namespaceVersion, bool silent = false)
+        public static string FindEtsPath(int namespaceVersion)
         {
             if(Directory.Exists(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "CV"))) {
                 foreach(string path in Directory.GetDirectories(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "CV")).Reverse()) {
                     EtsVersion? ets = checkEtsPath(path, namespaceVersion);
                     if(ets != null) {
-                        if(!silent)
-                            Console.WriteLine($"Found namespace {namespaceVersion} in xml, using ETS {ets.Version} (local) for conversion... (Path: {path})");
                         return path;
                     }
                 }
@@ -364,8 +381,6 @@ namespace OpenKNX.Toolbox.Sign
             {
                 EtsVersion? ets = checkEtsPath(path, namespaceVersion);
                 if(ets != null) {
-                    if(!silent)
-                        Console.WriteLine($"Found namespace {namespaceVersion} in xml, using ETS {ets.Version} for conversion... (Path: {path})");
                     return path;
                 }
             }

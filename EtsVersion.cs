@@ -9,6 +9,7 @@ class EtsVersion
         Version = version;
         Namespace = ns;
         IsExactNamespace = isExact;
+        Path = "";
     }
 
     public string Path { get; set; }
