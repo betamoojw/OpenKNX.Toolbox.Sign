@@ -38,7 +38,7 @@ namespace OpenKNX.Toolbox.Sign
                     throw new Exception($"Could not create HardwareSigner (ETS {lVersion})");
                 _instance = Activator.CreateInstance(_type, hardwareFile, applProgIdMappings, applProgHashes, patchIds, registrationKey, knxSchemaVersion);
             } else if(lVersion >= new System.Version("6.0.0")) { //ab ETS6.0/6.1
-                Type? schemaVersion = objm.GetType("Knx.Ets.Common.Schema.KnxXmlSchemaVersion");
+                Type? schemaVersion = objm.GetType("Knx.Ets.Xml.ObjectModel.KnxXmlSchemaVersion");
                 if(schemaVersion == null)
                     throw new Exception($"Could not create schemaVersion (ETS {lVersion})");
                 object knxSchemaVersion = Enum.ToObject(schemaVersion, nsVersion);
