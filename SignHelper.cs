@@ -46,12 +46,18 @@ namespace OpenKNX.Toolbox.Sign
 
             SplitXml(lTempXmlFileName, outputFolder);
 
+            // we derive the baggage name from iKnxprodFileName name
             string iBaggageName = "";
-            foreach(string dir in Directory.GetDirectories(iWorkingDir))
-                if(dir.EndsWith(".baggages"))
-                    iBaggageName = dir.Substring(dir.LastIndexOf(Path.PathSeparator)+1);
+            if (iKnxprodFileName.EndsWith(".knxprod"))
+                iBaggageName = iKnxprodFileName.Replace(".knxprod", ".baggages");
+            
+            // Check for Baggages in case no knxprod file is given    
+            if (string.IsNullOrEmpty(iBaggageName))
+                foreach (string dir in Directory.GetDirectories(iWorkingDir))
+                    if (dir.EndsWith(".baggages"))
+                        iBaggageName = dir.Substring(dir.LastIndexOf(Path.PathSeparator) + 1);
 
-            if(!string.IsNullOrEmpty(iBaggageName))
+            if (!string.IsNullOrEmpty(iBaggageName))
                 CopyBaggages(iWorkingDir, iBaggageName, outputFolder, manuId);
 
             string content = File.ReadAllText(lTempXmlFileName);
