@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
+
 namespace OpenKNX.Toolbox.Sign
 {
     public class SignHelper
@@ -49,7 +50,7 @@ namespace OpenKNX.Toolbox.Sign
             // we derive the baggage name from iKnxprodFileName name
             string iBaggageName = "";
             if (iKnxprodFileName.EndsWith(".knxprod"))
-                iBaggageName = iKnxprodFileName.Replace(".knxprod", ".baggages");
+                iBaggageName = Path.GetFileNameWithoutExtension(iKnxprodFileName) + ".baggages";
             
             // Check for Baggages in case no knxprod file is given    
             if (string.IsNullOrEmpty(iBaggageName))
