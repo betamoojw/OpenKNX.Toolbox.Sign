@@ -185,8 +185,6 @@ namespace OpenKNX.Toolbox.Sign
                 throw new Exception("Hardware element not found in xml");
             if(xappl == null)
                 throw new Exception("ApplicationPrograms element not found in xml");
-            if(xbagg == null)
-                throw new Exception("Baggages element not found in xml");
 
             List<XElement> xcataL = new List<XElement>();
             List<XElement> xhardL = new List<XElement>();
