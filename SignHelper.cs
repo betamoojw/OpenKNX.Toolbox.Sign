@@ -373,7 +373,7 @@ namespace OpenKNX.Toolbox.Sign
 
         public static string FindEtsPath(int namespaceVersion)
         {
-            if(Directory.Exists(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "CV"))) {
+            if(Directory.Exists(System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "bin", "CV"))) {
                 foreach(string path in Directory.GetDirectories(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "CV")).Reverse()) {
                     EtsVersion? ets = checkEtsPath(path, namespaceVersion);
                     if(ets != null) {
