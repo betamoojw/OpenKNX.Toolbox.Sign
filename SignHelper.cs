@@ -16,11 +16,11 @@ namespace OpenKNX.Toolbox.Sign
             Application
         }
         
-        public static async Task ExportKnxprodAsync(string iWorkingDir, string iKnxprodFileName, string lTempXmlFileName, string iXsdFileName, bool iIsDebug, bool iAutoXsd)
+        public static async Task ExportKnxprodAsync(string iWorkingDir, string iKnxprodFileName, string lTempXmlFileName, string iXsdFileName, bool iIsDebug, bool iAutoXsd, CancellationToken token = default)
         {
             Task runner = Task.Run(() => {
                 ExportKnxprod(iWorkingDir, iKnxprodFileName, lTempXmlFileName, iXsdFileName, iIsDebug, iAutoXsd);
-            });
+            }, token);
             await runner;
             if(runner.Exception != null)
                 throw runner.Exception;
@@ -140,9 +140,10 @@ namespace OpenKNX.Toolbox.Sign
                 File.Delete(Path.Combine(outputFolder, "knx_master.xml"));
             }
 
+            ns = 23;
             if (!File.Exists(Path.Combine(basePath, "Masters", $"project-{ns}.xml")))
             {
-                if(!Directory.Exists(Path.Combine(basePath, "Masters")))
+                if (!Directory.Exists(Path.Combine(basePath, "Masters")))
                     Directory.CreateDirectory(Path.Combine(basePath, "Masters"));
                 HttpClient client = new HttpClient();
                 string masterXML = await client.GetStringAsync($"https://update.knx.org/data/XML/project-{ns}/knx_master.xml");
