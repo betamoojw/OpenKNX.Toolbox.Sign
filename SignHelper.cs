@@ -50,9 +50,16 @@ namespace OpenKNX.Toolbox.Sign
             // we derive the baggage name from iKnxprodFileName name
             string iBaggageName = "";
             if (iKnxprodFileName.EndsWith(".knxprod"))
-                iBaggageName = Path.GetFileNameWithoutExtension(iKnxprodFileName) + ".baggages";
-            
-            // Check for Baggages in case no knxprod file is given    
+            {
+                Regex regex1 = new Regex(@"([0-9]{1}\.[0-9]{1}\.[0-9]{1})\.knxprod");
+                if(!regex1.IsMatch(iKnxprodFileName))
+                {
+                    // only if the file name does not contain version info
+                    iBaggageName = Path.GetFileNameWithoutExtension(iKnxprodFileName) + ".baggages";
+                }
+            }
+
+            // Check for Baggages in case no knxprod file is given or it contains version 
             if (string.IsNullOrEmpty(iBaggageName))
                 foreach (string dir in Directory.GetDirectories(iWorkingDir))
                     if (dir.EndsWith(".baggages"))
