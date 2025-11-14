@@ -147,7 +147,6 @@ namespace OpenKNX.Toolbox.Sign
                 File.Delete(Path.Combine(outputFolder, "knx_master.xml"));
             }
 
-            ns = 23;
             if (!File.Exists(Path.Combine(basePath, "Masters", $"project-{ns}.xml")))
             {
                 if (!Directory.Exists(Path.Combine(basePath, "Masters")))
