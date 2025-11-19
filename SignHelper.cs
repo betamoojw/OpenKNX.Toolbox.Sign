@@ -97,7 +97,7 @@ namespace OpenKNX.Toolbox.Sign
             string appFile = "";
             foreach(string file in Directory.GetFiles(Path.Combine(outputFolder, manuId)))
             {
-                if(file.Contains(manuId + "_"))
+                if(file.Contains("_A-"))
                 {
                     appFile = file;
                     break;
