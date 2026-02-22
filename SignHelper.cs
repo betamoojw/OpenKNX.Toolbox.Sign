@@ -16,17 +16,17 @@ namespace OpenKNX.Toolbox.Sign
             Application
         }
         
-        public static async Task ExportKnxprodAsync(string iWorkingDir, string iKnxprodFileName, string lTempXmlFileName, string iXsdFileName, bool iIsDebug, bool iAutoXsd, CancellationToken token = default)
+        public static async Task ExportKnxprodAsync(string iWorkingDir, string iKnxprodFileName, string lTempXmlFileName, string iXsdFileName, bool iIsDebug, bool iAutoXsd, string iBaggagesDirName = "", CancellationToken token = default)
         {
             Task runner = Task.Run(() => {
-                ExportKnxprod(iWorkingDir, iKnxprodFileName, lTempXmlFileName, iXsdFileName, iIsDebug, iAutoXsd);
+                ExportKnxprod(iWorkingDir, iKnxprodFileName, lTempXmlFileName, iXsdFileName, iIsDebug, iAutoXsd, iBaggagesDirName);
             }, token);
             await runner;
             if(runner.Exception != null)
                 throw runner.Exception;
         }
 
-        public static void ExportKnxprod(string iWorkingDir, string iKnxprodFileName, string lTempXmlFileName, string iXsdFileName, bool iIsDebug, bool iAutoXsd)
+        public static void ExportKnxprod(string iWorkingDir, string iKnxprodFileName, string lTempXmlFileName, string iXsdFileName, bool iIsDebug, bool iAutoXsd, string iBaggagesDirName)
         {
             string outputFolder = AppDomain.CurrentDomain.BaseDirectory;
             if(Directory.Exists(Path.Combine(outputFolder, "Storage")))
@@ -47,32 +47,33 @@ namespace OpenKNX.Toolbox.Sign
 
             SplitXml(lTempXmlFileName, outputFolder);
 
-            string iBaggageName = "";
+            string iBaggageName = Path.GetFileName(iBaggagesDirName);
             string[] baggageDirs = Directory.GetDirectories(iWorkingDir, "*.baggages");
-
-            if(baggageDirs.Length > 1)
-            {
-                if (iKnxprodFileName.EndsWith(".knxprod"))
+            if (string.IsNullOrEmpty(iBaggageName))
+            {                
+                // we derive the baggage name from iKnxprodFileName name
+                if(baggageDirs.Length > 1)
                 {
-                    Regex regex1 = new Regex(@"([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2})\.knxprod");
-                    if(!regex1.IsMatch(iKnxprodFileName))
+                    if (iKnxprodFileName.EndsWith(".knxprod"))
                     {
-                        // only if the file name does not contain version info
-                        iBaggageName = Path.GetFileNameWithoutExtension(iKnxprodFileName) + ".baggages";
+                        Regex regex1 = new Regex(@"([0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2})\.knxprod");
+                        if(!regex1.IsMatch(iKnxprodFileName))
+                        {
+                            // only if the file name does not contain version info
+                            iBaggageName = Path.GetFileNameWithoutExtension(iKnxprodFileName) + ".baggages";
+                        }
                     }
                 }
+                else if(baggageDirs.Length == 1)
+                {
+                    iBaggageName = Path.GetFileName(baggageDirs[0]);
+                }
             }
-            else if(baggageDirs.Length == 1)
-            {
-                iBaggageName = Path.GetFileName(baggageDirs[0]);
-            }
-
-            // we derive the baggage name from iKnxprodFileName name
-            
 
             // Check for Baggages in case no knxprod file is given or it contains version 
-            if (string.IsNullOrEmpty(iBaggageName) && baggageDirs.Length > 0)
-                throw new Exception("Could not determine baggage folder to copy.");
+            if (baggageDirs.Length > 0)
+                if (string.IsNullOrEmpty(iBaggageName) || !baggageDirs.Any(d => Path.GetFileName(d).Contains(iBaggageName, StringComparison.InvariantCultureIgnoreCase)))
+                    throw new Exception(string.Format("Could not determine baggage folder '{0}' to copy.", iBaggageName));
 
             if (!string.IsNullOrEmpty(iBaggageName))
                 CopyBaggages(iWorkingDir, iBaggageName, outputFolder, manuId);
