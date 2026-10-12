@@ -119,6 +119,13 @@ namespace OpenKNX.Toolbox.Sign
                     break;
                 }
             }
+            if(string.IsNullOrEmpty(appFile))
+            {
+                string? app_file = Directory.GetFiles(Path.Combine(outputFolder, manuId), "*").FirstOrDefault(f => !f.Contains("knx_master.") && !f.Contains("Hardware.") && !f.Contains("Catalog.") && !f.Contains("Baggages") && (f.EndsWith(".xml") || f.EndsWith(".mtxml")));
+                if (app_file == null)
+                    throw new Exception("Could not determine App xml for signing");
+                appFile = app_file;
+            }
             FileInfo appInfo = new FileInfo(appFile);
 
             ApplicationProgramHasher aph = new ApplicationProgramHasher(appInfo, mapBaggageIdToFileIntegrity, iPathETS, ns, true);
